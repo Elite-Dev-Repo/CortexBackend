@@ -29,19 +29,14 @@ class FeatureSerializer(serializers.ModelSerializer):
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    features = serializers.SerializerMethodField()
+    features = FeatureSerializer(many=True, read_only=True, source='feature_set')
     class Meta:
         model = Project
         fields = ['id', 'name', 'description', 'created_at', 'workspace', 'features', 'status']
 
 
-    def get_features(self,obj):
-        project = Feature.objects.filter(project=obj)
-        return FeatureSerializer(project, many=True).data
-
-
 class WorkspaceSerializer(serializers.ModelSerializer):
-    projects = serializers.SerializerMethodField()
+    projects = ProjectSerializer(many=True, read_only=True, source='project_set')
     class Meta:
         model = Workspace
         fields = ['id', 'name', 'description', 'created_at', 'user', 'projects']
@@ -49,12 +44,7 @@ class WorkspaceSerializer(serializers.ModelSerializer):
 
     def create(self, obj):
         user = self.context['request'].user
-        other_workspace = Workspace.objects.filter(user=user)
-        if len(other_workspace) >= 3:
+        if Workspace.objects.filter(user=user).count() >= 3:
             raise serializers.ValidationError("You can only have 3 workspaces")
         workspace = Workspace.objects.create(**obj, user=user)
         return workspace
-
-    def get_projects(self, obj):
-        projects = Project.objects.filter(workspace=obj)
-        return ProjectSerializer(projects, many=True).data

@@ -30,10 +30,14 @@ class WorkspaceAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Workspace.objects.filter(user=user).all()
+        return Workspace.objects.filter(user=user).prefetch_related(
+            'project_set__feature_set__task_set'
+        )
 
 class WorkspaceDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Workspace.objects.all()
+    queryset = Workspace.objects.prefetch_related(
+        'project_set__feature_set__task_set'
+    )
     permission_classes = [IsAuthenticated]
     serializer_class = WorkspaceSerializer
 
@@ -45,11 +49,13 @@ class ProjectListCreateAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Project.objects.filter(workspace__user=user).all()
+        return Project.objects.filter(workspace__user=user).prefetch_related(
+            'feature_set__task_set'
+        )
 
 
 class ProjectDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Project.objects.all()
+    queryset = Project.objects.prefetch_related('feature_set__task_set')
     permission_classes = [IsAuthenticated]
     serializer_class = ProjectSerializer
 
@@ -61,7 +67,9 @@ class FeatureListCreateAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Feature.objects.filter(project__workspace__user=user).all()
+        return Feature.objects.filter(
+            project__workspace__user=user
+        ).prefetch_related('task_set')
 
 
 class FeatureDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
@@ -71,7 +79,9 @@ class FeatureDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Feature.objects.filter(project__workspace__user=user)
+        return Feature.objects.filter(
+            project__workspace__user=user
+        ).prefetch_related('task_set')
 
 
 class TaskAPIView(generics.ListCreateAPIView):
