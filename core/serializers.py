@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Workspace, Project, Feature, Task
+from .models import User, Workspace, Project, Feature, Task, OTP
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,6 +11,11 @@ class UserSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         return user
 
+class OTPSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OTP
+        fields = ['id', 'user', 'otp', 'expires_at']
+        read_only_fields = ['user', 'otp', 'expires_at']
 
 
 class TaskSerializer(serializers.ModelSerializer):

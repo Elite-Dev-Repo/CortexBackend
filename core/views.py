@@ -1,10 +1,16 @@
 from core.serializers import TaskSerializer
-from core.models import Task
+from core.models import Task, OTP, User
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import User, Workspace, Project, Feature
-from .serializers import UserSerializer, WorkspaceSerializer, ProjectSerializer, FeatureSerializer
+from .serializers import UserSerializer, WorkspaceSerializer, ProjectSerializer, FeatureSerializer, OTPSerializer
+from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework import status
+from datetime import timezone
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 
 class RegisterAPIView(generics.ListCreateAPIView):
     queryset = User.objects.all()
@@ -20,6 +26,19 @@ class RetrieveUserProfileAPIView(generics.RetrieveAPIView):
     def get_object(self):
         return self.request.user
 
+
+class VerifyEmailAPiView(APIView):
+    def post(self, request):
+        code = request.data.get('code')
+        otp = OTP.objects.filter(otp=code).first()
+        if not otp:
+            return Response({'error': 'Invalid Code'}, status=status.HTTP_400_BAD_REQUEST)
+        if otp.expires_at < timezone.now():
+            return Response({'error': 'Code expired'}, status=status.HTTP_400_BAD_REQUEST)
+        otp.user.is_active = True
+        otp.user.save()
+        otp.delete()
+        return Response({'message': 'Email verified successfully'}, status=status.HTTP_200_OK)
 
 
 
@@ -102,3 +121,6 @@ class TaskDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         user = self.request.user
         return Task.objects.filter(feature__project__workspace__user=user)
+
+
+

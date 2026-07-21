@@ -3,6 +3,7 @@ import uuid
 # pyrefly: ignore [missing-import]
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+import secrets
 # Create your models here.
 
 
@@ -114,3 +115,19 @@ class Task(models.Model):
 
     def __str__(self):
         return f"Task: {self.name} - {self.feature.name}"
+
+
+
+
+class OTP(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    otp = models.CharField(max_length=6, default=secrets.token_hex(3))
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_verified = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"OTP: {self.otp} - {self.user.username}"
