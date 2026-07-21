@@ -1,3 +1,4 @@
+from datetime import timedelta
 from core.serializers import TaskSerializer
 from core.models import Task, OTP, User
 from rest_framework import generics, status
@@ -9,8 +10,9 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-from datetime import timezone
+from django.utils import timezone
 from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
+from .services import send_otp_email
 
 class RegisterAPIView(generics.ListCreateAPIView):
     queryset = User.objects.all()
@@ -41,6 +43,18 @@ class VerifyEmailAPiView(APIView):
         return Response({'message': 'Email verified successfully'}, status=status.HTTP_200_OK)
 
 
+class ResendOTPTokenAPIView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        email_user = User.objects.get(email=email)
+        if not email_user:
+            return Response({'error': 'Incorrect details'}, status = status.HTTP_400_BAD_REQUEST)
+        if email_user.is_active:
+            return Response({'error': 'Account Already Verified'}, status = status.HTTP_400_BAD_REQUEST)
+        otp = OTP.objects.create(user=email_user, expires_at=timezone.now() + timedelta(minutes=10))
+        send_otp_email(email, otp.otp)
+        return Response({'message': 'OTP sent successfully'}, status = status.HTTP_200_OK)
+        
 
 class WorkspaceAPIView(generics.ListCreateAPIView):
     queryset = Workspace.objects.all()

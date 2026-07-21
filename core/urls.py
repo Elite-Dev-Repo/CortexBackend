@@ -1,11 +1,12 @@
 from core.views import TaskDetailAPIView
 from core.views import TaskAPIView
 from django.urls import path
-from .views import RegisterAPIView, WorkspaceAPIView, ProjectListCreateAPIView, FeatureListCreateAPIView, RetrieveUserProfileAPIView, WorkspaceDetailAPIView, ProjectDetailAPIView, FeatureDetailAPIView, VerifyEmailAPiView
+from .views import RegisterAPIView, WorkspaceAPIView, ProjectListCreateAPIView, FeatureListCreateAPIView, RetrieveUserProfileAPIView, WorkspaceDetailAPIView, ProjectDetailAPIView, FeatureDetailAPIView, VerifyEmailAPiView, ResendOTPTokenAPIView
 
 urlpatterns = [
     path('register/', RegisterAPIView.as_view(), name='register'),
     path('verify-email/', VerifyEmailAPiView.as_view(), name='verify-email'),
+    path('resend-otp/', ResendOTPTokenAPIView.as_view(), name='resend-otp'),
     path('profile/', RetrieveUserProfileAPIView.as_view(), name='profile'),
     path('workspaces/', WorkspaceAPIView.as_view(), name='workspaces'),
     path('workspace/<uuid:pk>/', WorkspaceDetailAPIView.as_view(), name='workspace-detail'),
